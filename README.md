@@ -1,4 +1,4 @@
-# esx_truck  
+# esx_ati  
 
 This scripts is a vehicle inventory which you can store all item you put in the config.   
 
