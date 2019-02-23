@@ -1,10 +1,8 @@
 ESX = nil
 local arrayWeight = Config.localWeight
-local VehicleList = { }
+local VehicleList = {}
 
-TriggerEvent('esx:getSharedObject', function(obj)
-  ESX = obj
-end)
+TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
 RegisterServerEvent('esx_truck_inventory:getOwnedVehicule')
 AddEventHandler('esx_truck_inventory:getOwnedVehicule', function()
@@ -22,6 +20,7 @@ AddEventHandler('esx_truck_inventory:getOwnedVehicule', function()
       			local vehicle = json.decode(v.vehicle)
       			table.insert(vehicules, {plate = vehicle.plate})
       		end
+		--ESX.ShowNotification(result)
       end
     TriggerClientEvent('esx_truck_inventory:setOwnedVehicule', _source, vehicules)
     end)
@@ -142,7 +141,7 @@ AddEventHandler('esx_truck_inventory:addInventoryItem', function(type, model, pl
 			if playerItemCount >= qtty then
 			   xPlayer.removeInventoryItem(item, qtty)
 			else
-			  TriggerClientEvent('esx:showNotification', _source, 'quantité invalide')
+			  TriggerClientEvent('esx:showNotification', _source, 'quantitĂ© invalide')
 			end
 		end
 
