@@ -83,44 +83,56 @@ end
 function openmenuvehicle()
 	local playerPed = GetPlayerPed(-1)
 	local coords    = GetEntityCoords(playerPed)
-	local vehicle   =VehicleInFront()
+	local vehicle   = VehicleInFront()
 	globalplate  = GetVehicleNumberPlateText(vehicle)
 	if globalplate ~= nil or globalplate ~= "" or globalplate ~= " " then
 		ESX.TriggerServerCallback('esx_truck:checkvehicle',function(valid)
 			if (not valid) then
-				-- CloseToVehicle = true
-				-- TriggerServerEvent('esx_truck_inventory:AddVehicleList', globalplate)
+				--ESX.ShowNotification('Vehicle ~r~Locked')
+				--CloseToVehicle = true
+				--TriggerServerEvent('esx_truck_inventory:AddVehicleList', globalplate)
+				--print(valid)
 				local vehFront = VehicleInFront()
 				local x,y,z = table.unpack(GetEntityCoords(GetPlayerPed(-1),true))
 				local closecar = GetClosestVehicle(x, y, z, 4.0, 0, 71)
 			  if vehFront > 0 and closecar ~= nil and GetPedInVehicleSeat(closecar, -1) ~= GetPlayerPed(-1) then
 					lastVehicle = vehFront
-						local model = GetDisplayNameFromVehicleModel(GetEntityModel(closecar))
+					local model = GetDisplayNameFromVehicleModel(GetEntityModel(closecar))
 					local locked = GetVehicleDoorLockStatus(closecar)
 					local class = GetVehicleClass(vehFront)
 					  ESX.UI.Menu.CloseAll()
 					if ESX.UI.Menu.IsOpen('default', GetCurrentResourceName(), 'inventory') then
-					  SetVehicleDoorShut(vehFront, 5, false)
+						ESX.UI.Menu.CloseAll()
 					else
-					  if locked == 1 or class == 15 or class == 16 or class == 14 then
-						  SetVehicleDoorOpen(vehFront, 5, false, false)
+					local isopen = GetVehicleDoorAngleRatio(vehicle,5)
+					  if locked == 1 or IsPedHuman(vehicle) then
+							if globalplate ~= nil or globalplate ~= "" or globalplate ~= " " then
+								CloseToVehicle = true
+								SetVehicleDoorOpen(vehFront, 5, false)
+								Citizen.Wait(500)
+								TaskStartScenarioInPlace(playerPed, "PROP_HUMAN_BUM_BIN", 0, true)
+								TriggerServerEvent('esx_truck_inventory:AddVehicleList', globalplate)
+								TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
+							end
+						  elseif class == 10 or class == 20 or class == 15 or class == 16 or class == 14 then
 						  ESX.UI.Menu.CloseAll()
 						  if globalplate ~= nil or globalplate ~= "" or globalplate ~= " " then
 							CloseToVehicle = true
+							TaskStartScenarioInPlace(playerPed, "PROP_HUMAN_BUM_BIN", 0, true)
 							TriggerServerEvent('esx_truck_inventory:AddVehicleList', globalplate)
-						  TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
+							TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
 						  end
-						else
-						   ESX.ShowNotification('Ce coffre est ~r~fermé')
+					  else
+					   ESX.ShowNotification('Vehicle ~r~Locked')
 					  end
 					end
 				else
-					ESX.ShowNotification('Pas de ~r~véhicule~w~ à proximité')
+					--ESX.ShowNotification('No ~r~Vehicle ~w~ nearbye')
 				end
 				lastOpen = true
 				GUI.Time  = GetGameTimer()
 			else
-				TriggerEvent('esx:showNotification', "Quelqu'un regarde déja le coffre.")
+				TriggerEvent('esx:showNotification', "~y~Someone already in trunk")
 			end
 		end, globalplate)
 	end
@@ -130,9 +142,11 @@ local count = 0
 -- Key controls
 Citizen.CreateThread(function()
   while true do
-
+	local closecar = GetClosestVehicle(x, y, z, 4.0, 0, 71)
+	local vehFront = VehicleInFront()
     Wait(0)
-    if IsControlPressed(0, Keys["-"]) and (GetGameTimer() - GUI.Time) > 1000 then
+    if ( IsControlJustReleased( 0, 303 ) or IsDisabledControlJustReleased( 0, 303 ) ) and GetLastInputMethod( 0 )then
+	  if closecar ~= nil then
 		if count == 0 then
 			openmenuvehicle()
 			count = count +1
@@ -140,17 +154,20 @@ Citizen.CreateThread(function()
 			Wait(2000)
 			count = 0
 		end
+		end
     elseif lastOpen and IsControlPressed(0, Keys["BACKSPACE"]) and (GetGameTimer() - GUI.Time) > 150 then
 	  CloseToVehicle = false
       lastOpen = false
       if lastVehicle > 0 then
-      	SetVehicleDoorShut(lastVehicle, 5, false)
 		local lastvehicleplatetext = GetVehicleNumberPlateText(lastVehicle)
 		TriggerServerEvent('esx_truck_inventory:RemoveVehicleList', lastvehicleplatetext)
       	lastVehicle = 0
+		Citizen.Wait(1500)
+	  SetVehicleDoorShut(vehFront, 5, false)
       end
       GUI.Time  = GetGameTimer()
     end
+	
   end
 end)
 
@@ -169,7 +186,8 @@ Citizen.CreateThread(function()
 			CloseToVehicle = false
 			lastOpen = false
 			ESX.UI.Menu.CloseAll()
-			SetVehicleDoorShut(lastVehicle, 5, false)
+			Citizen.Wait(500)
+	  SetVehicleDoorShut(vehFront, 5, false)
 		end
 	end
   end
@@ -184,7 +202,7 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
   TriggerServerEvent("esx_truck_inventory:getOwnedVehicule")
 
 	table.insert(elements, {
-      label     = 'Déposer',
+      label     = 'Deposit',
       count     = 0,
       value     = 'deposit',
     })
@@ -200,7 +218,7 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
 		      })			
 			elseif inventory[i].type == 'item_weapon' then
 			  table.insert(elements, {
-				label     = inventory[i].label .. ' | munitions: ' .. inventory[i].count,
+				label     = inventory[i].label .. ' | Ammunition: ' .. inventory[i].count,
 				count     = inventory[i].count,
 				value     = inventory[i].name,
 				type	  = inventory[i].type
@@ -221,7 +239,8 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
 	ESX.UI.Menu.Open(
 	  'default', GetCurrentResourceName(), 'inventory_deposit',
 	  {
-	    title    = 'Contenu du coffre',
+	    css		 = 'vehicleinventory',
+	    title    = 'Vehicle Contents',
 	    align    = 'bottom-right',
 	    elements = elements,
 	  },
@@ -278,14 +297,15 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
 			ESX.UI.Menu.Open(
 			  'default', GetCurrentResourceName(), 'inventory_player',
 			  {
-			    title    = 'Contenu de l\'inventaire',
+				css		 = 'vehicleinventory',
+			    title    = 'Deposit into vehicle',
 			    align    = 'bottom-right',
 			    elements = elem,
 			  },function(data3, menu3)
 				ESX.UI.Menu.Open(
 				  'dialog', GetCurrentResourceName(), 'inventory_item_count_give',
 				  {
-				    title = 'quantité'
+				    title = 'Quantity'
 				  },
 				  function(data4, menu4)
             local quantity = tonumber(data4.value)
@@ -294,7 +314,6 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
             vehFront = VehicleInFront()
 
             local typeVeh = GetVehicleClass(vehFront)
-
             if totalweight > Config.VehicleLimit[typeVeh] then
               max = true
             else
@@ -306,7 +325,8 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
               Wait(1000)
             end
             for i=1, #vehiclePlate do
-              if vehiclePlate[i].plate == GetVehicleNumberPlateText(vehFront) then
+				tplate = (vehiclePlate[i].plate .. " ")
+              if tplate == GetVehicleNumberPlateText(vehFront) then
                 ownedV = 1
                 break
               else
@@ -326,22 +346,21 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
               --  VehicleMaxSpeed(closecar,totalweight,Config.VehicleLimit[GetVehicleClass(closecar)])
 
   				TriggerServerEvent('esx_truck_inventory:addInventoryItem', GetVehicleClass(closecar), GetDisplayNameFromVehicleModel(GetEntityModel(closecar)), GetVehicleNumberPlateText(vehFront), data3.current.value, quantity, data3.current.name, data3.current.type, ownedV)
-                ESX.ShowNotification('Poid du coffre : ~g~'.. Kgweight .. ' Kg / '..MaxVh..' Kg')
+                ESX.ShowNotification('Trunk capacity : ~g~'.. Kgweight .. ' lbs / '..MaxVh..' lbs')
 				Citizen.Wait(500)
-				TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
+				--TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
+				ClearPedTasks(GetPlayerPed(-1))
               else
-                ESX.ShowNotification('Vous avez atteint la limite des ~r~ '..MaxVh..' Kg')
+                ESX.ShowNotification('You have reached the limit ~r~ '..MaxVh..' lbs')
               end
 			else
-				ESX.ShowNotification('~r~ Quantité invalide')
+				ESX.ShowNotification('~r~Quantity invalide')
 			end
 
 				    ESX.UI.Menu.CloseAll()
 
-
 				  end,
 				  function(data4, menu4)
-		            SetVehicleDoorShut(vehFrontBack, 5, false)
 				    ESX.UI.Menu.CloseAll()
 					local lastvehicleplatetext = GetVehicleNumberPlateText(vehFrontBack)
 					TriggerServerEvent('esx_truck_inventory:RemoveVehicleList', lastvehicleplatetext)
@@ -350,14 +369,18 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
 			end,
 				function(data, menu)
 					menu.close()
+					ESX.UI.Menu.CloseAll()
+					ClearPedTasks(GetPlayerPed(-1))
 				end)
 		elseif data.current.type == 'cancel' then
 			menu.close()
+			ESX.UI.Menu.CloseAll()
+			ClearPedTasks(GetPlayerPed(-1))
 	  	else
 			ESX.UI.Menu.Open(
 			  'dialog', GetCurrentResourceName(), 'inventory_item_count_give',
 			  {
-			    title = 'quantité'
+			    title = 'Amount'
 			  },
 			  function(data2, menu2)
 
@@ -393,27 +416,27 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
 			   local Itemweight =tonumber(getItemyWeight(data.current.value)) * quantity
 			   local totalweight = tonumber(weight) - Itemweight
 			   local Kgweight =  totalweight/1000
-			   ESX.ShowNotification('Poid du coffre : ~g~'.. Kgweight .. ' Kg / '..MaxVh..' Kg')
+			   ESX.ShowNotification('Trunk capacity : ~g~'.. Kgweight .. ' lbs / '..MaxVh..' lbs')
             else
-              ESX.ShowNotification('~r~ Tu en porte trops')
+              ESX.ShowNotification('~r~ You have reached the limit')
             end
 			    else
-			      ESX.ShowNotification('~r~ Quantité invalide')
+			      ESX.ShowNotification('~r~ Quantity invalide')
 			    end
 
 			    ESX.UI.Menu.CloseAll()
-
+				
 	        	local vehFront = VehicleInFront()
 	          	if vehFront > 0 then
 	          		ESX.SetTimeout(1500, function()
-	              		TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
+	              		--TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
+						ClearPedTasks(GetPlayerPed(-1))
 	          		end)
 	            else
-	              SetVehicleDoorShut(vehFrontBack, 5, false)
+	              --SetVehicleDoorShut(vehFrontBack, 5, false)
 	            end
 			  end,
 			  function(data2, menu2)
-                        --SetVehicleDoorShut(vehFrontBack, 5, false)
                         ESX.UI.Menu.CloseAll()
                         local lastvehicleplatetext = GetVehicleNumberPlateText(vehFrontBack)
                         TriggerServerEvent('esx_truck_inventory:RemoveVehicleList', lastvehicleplatetext)
@@ -423,6 +446,8 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
         end,
 		function(data, menu)
 			menu.close()
+			ESX.UI.Menu.CloseAll()
+			ClearPedTasks(GetPlayerPed(-1))
 		end
 	)
 end)
