@@ -348,7 +348,7 @@ AddEventHandler('esx_truck_inventory:getInventoryLoaded', function(inventory,wei
   				TriggerServerEvent('esx_truck_inventory:addInventoryItem', GetVehicleClass(closecar), GetDisplayNameFromVehicleModel(GetEntityModel(closecar)), GetVehicleNumberPlateText(vehFront), data3.current.value, quantity, data3.current.name, data3.current.type, ownedV)
                 ESX.ShowNotification('Trunk capacity : ~g~'.. Kgweight .. ' lbs / '..MaxVh..' lbs')
 				Citizen.Wait(500)
-				--TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
+				TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
 				ClearPedTasks(GetPlayerPed(-1))
               else
                 ESX.ShowNotification('You have reached the limit ~r~ '..MaxVh..' lbs')
