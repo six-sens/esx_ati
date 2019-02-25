@@ -1,4 +1,4 @@
---Truck
+--Vehicle Inventory
 Config	=	{}
 
  -- Limit, unit can be whatever you want. Originally grams (as average people can hold 25kg)
@@ -10,13 +10,14 @@ Config.Limit = 25000
 	-- weight < 0 : The item add place on inventory. Smart people will love it.
 Config.DefaultWeight = 500
 
+-- Set to true if you want animation.
+Config.Animation = false
 
 
--- If true, ignore rest of file
-Config.WeightSqlBased = false
-
--- I Prefer to edit weight on the config.lua and I have switched Config.WeightSqlBased to false:
-
+-- If you wish for the item to persist after a restarta 
+-- Add every item from your item table of your database.
+-- If item is not listed below item will be remove from vehicle inventory after a server restart.
+-- Use the list below as a guide. Remove item you do not have.
 Config.localWeight = {
     --- FOOD ---
 	bread = 250,
@@ -132,7 +133,7 @@ Config.localWeight = {
 	WEAPON_FLASHLIGHT = 1000,
 	WEAPON_FLAREGUN = 1000,
 	WEAPON_PISTOL = 1000,
-	WEAPON_COMBATPISTOL = 1000, -- poid poir une munnition
+	WEAPON_COMBATPISTOL = 1000,
 	WEAPON_APPISTOL = 1000,
 	WEAPON_PISTOL50 = 1000,
 	WEAPON_COMBATPDW = 1000,
@@ -171,7 +172,8 @@ Config.localWeight = {
 	---WEAPONS----
 	
 	--- MONEY ---
-	black_money = 1, -- poids pour un argent
+	black_money = 1,
+	bank = 1, 
 	--- MONEY ---
 }
 
@@ -195,7 +197,7 @@ Config.VehicleLimit = {
     [16] = 300000, --Planes
     [17] = 400000, --Service
     [18] = 400000, --Emergency
-    [19] = 0, --Military
+    [19] = 70000, --Military
     [20] = 3000000, --Commercial
     [21] = 0, --Trains
 }
