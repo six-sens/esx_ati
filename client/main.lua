@@ -109,8 +109,10 @@ function openmenuvehicle()
 							if globalplate ~= nil or globalplate ~= "" or globalplate ~= " " then
 								CloseToVehicle = true
 								SetVehicleDoorOpen(vehFront, 5, false)
+								if (Config.Animation)  then
 								Citizen.Wait(500)
 								TaskStartScenarioInPlace(playerPed, "PROP_HUMAN_BUM_BIN", 0, true)
+								end
 								TriggerServerEvent('esx_truck_inventory:AddVehicleList', globalplate)
 								TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
 							end
@@ -118,7 +120,9 @@ function openmenuvehicle()
 						  ESX.UI.Menu.CloseAll()
 						  if globalplate ~= nil or globalplate ~= "" or globalplate ~= " " then
 							CloseToVehicle = true
+							if (Config.Animation)  then
 							TaskStartScenarioInPlace(playerPed, "PROP_HUMAN_BUM_BIN", 0, true)
+							end
 							TriggerServerEvent('esx_truck_inventory:AddVehicleList', globalplate)
 							TriggerServerEvent("esx_truck_inventory:getInventory", GetVehicleNumberPlateText(vehFront))
 						  end
@@ -155,14 +159,16 @@ Citizen.CreateThread(function()
 			count = 0
 		end
 		end
-    elseif lastOpen and IsControlPressed(0, Keys["BACKSPACE"]) and (GetGameTimer() - GUI.Time) > 150 then
+	elseif ( IsControlJustReleased( 0, 177 ) or IsDisabledControlJustReleased( 0, 177 ) ) and GetLastInputMethod( 0 )then	
 	  CloseToVehicle = false
       lastOpen = false
       if lastVehicle > 0 then
 		local lastvehicleplatetext = GetVehicleNumberPlateText(lastVehicle)
 		TriggerServerEvent('esx_truck_inventory:RemoveVehicleList', lastvehicleplatetext)
       	lastVehicle = 0
+		if (Config.Animation)  then
 		Citizen.Wait(1500)
+		end
 	  SetVehicleDoorShut(vehFront, 5, false)
       end
       GUI.Time  = GetGameTimer()
